@@ -13,6 +13,7 @@ export function BiometricPad() {
   const activeView = useStore((s) => s.activeView)
   const checkoutState = useStore((s) => s.checkoutState)
   const setCheckoutState = useStore((s) => s.setCheckoutState)
+  const addedIngredients = useStore((s) => s.addedIngredients)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hapticRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -28,9 +29,9 @@ export function BiometricPad() {
       setCheckoutState("filling")
       playHydraulicFlood()
       if (typeof window !== "undefined" && window.PaymentRequest) {
-        const cartData = { total: 45, currency: "USD" }
-        const { ok } = await generatePaymentIntent(cartData)
+        const { ok, total } = await generatePaymentIntent(addedIngredients)
         if (!ok) return
+        const valueStr = total.toFixed(2)
         const supportedInstruments: PaymentMethodData[] = [
           { supportedMethods: "https://apple.com/apple-pay" },
           { supportedMethods: "basic-card" },
@@ -38,7 +39,7 @@ export function BiometricPad() {
         const details: PaymentDetailsInit = {
           total: {
             label: "Synesthetic Juice Batch",
-            amount: { currency: "USD", value: "45.00" },
+            amount: { currency: "USD", value: valueStr },
           },
         }
         try {
@@ -91,7 +92,7 @@ export function BiometricPad() {
         DESTINATION: LOCAL WALLET
       </p>
       <p className="absolute bottom-24 left-1/2 -translate-x-1/2 text-sm font-mono tracking-wider text-white/70">
-        TOTAL ENERGY: $45.00
+        TOTAL ENERGY: ${addedIngredients.length > 0 ? "45.00" : "0.00"}
       </p>
 
       <div className="relative flex items-center justify-center">

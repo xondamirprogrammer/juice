@@ -5,7 +5,6 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { Sphere, MeshTransmissionMaterial } from "@react-three/drei"
 import type { Mesh } from "three"
 import { Color } from "three"
-import * as Tone from "tone"
 import { useStore } from "@/store/use-store"
 import {
   getDistortion,
@@ -51,8 +50,11 @@ export function MercurySlider() {
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
-    // Silent AudioContext unlock -- the slider IS the trigger
-    Tone.start()
+    // Lazy-unlock AudioContext on first interaction (keeps Tone out of initial bundle)
+    import("tone").then((mod) => {
+      const Tone = (mod as { default?: typeof import("tone") }).default ?? mod
+      Tone.start()
+    }).catch(() => {})
     const target = e.target as Element
     if (target.setPointerCapture) {
       target.setPointerCapture(e.pointerId)
